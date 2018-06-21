@@ -1,5 +1,4 @@
 # AssetStudio
-Latest build: [![Build status](https://ci.appveyor.com/api/projects/status/rnu7l90422pdewx4?svg=true)](https://ci.appveyor.com/project/Perfare/assetstudio/branch/master/artifacts)
 
 **None of the repo, the tool, nor the repo owner is affiliated with, or sponsored or authorized by, Unity Technologies or its affiliates.**
 
@@ -45,5 +44,5 @@ Other interface elements have tooltips or are self-explanatory.
 ## Build
 
 * The project uses some C# 7 syntax, need Visual Studio 2017
-* **AssetStudioFBX** uses FBX SDK 2015.1, before building, you need to install the FBX SDK and modify the project file, change include directory and library directory to point to the FBX SDK directory
+* **AssetStudioFBX** uses FBX SDK 2019.0, before building, you need to install the FBX SDK and modify the project file, change include directory and library directory to point to the FBX SDK directory
 * If you want to change the FBX SDK version, you need to replace `libfbxsdk.dll` which in `AssetStudio/Library/x86/` and `x64` directory to the new version
