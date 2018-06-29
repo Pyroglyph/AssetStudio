@@ -13,8 +13,10 @@ using System.Diagnostics;
 using System.Drawing.Text;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Input;
 using static AssetStudio.Studio;
 using static AssetStudio.Importer;
+using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
 
 namespace AssetStudio
 {
@@ -255,9 +257,19 @@ namespace AssetStudio
             FilterAssetList();
         }
 
-        private void AssetStudioForm_KeyDown(object sender, KeyEventArgs e)
+        
+        private KeyboardState _keyboardState = Keyboard.GetState();
+        private KeyboardState _keyboardStateOld = Keyboard.GetState();
+
+        private void HandleKeyboardInput()
         {
-            if (e.Control && e.Alt && e.KeyCode == Keys.D)
+            _keyboardState = Keyboard.GetState();
+
+            var newMatrix = viewMatrixData;
+
+            if ((_keyboardState.IsKeyDown(Key.LControl) || _keyboardState.IsKeyDown(Key.RControl)) 
+                && (_keyboardState.IsKeyDown(Key.LAlt) || _keyboardState.IsKeyDown(Key.RAlt)) 
+                && _keyboardState.IsKeyDown(Key.D))
             {
                 debugMenuItem.Visible = !debugMenuItem.Visible;
                 buildClassStructuresMenuItem.Checked = debugMenuItem.Visible;
@@ -269,84 +281,82 @@ namespace AssetStudio
 
             if (glControl1.Visible)
             {
-                switch (e.KeyCode)
+                // Toggles
+                if (_keyboardState.IsKeyDown(Key.LControl) || _keyboardState.IsKeyDown(Key.RControl))
                 {
-                    case Keys.D: // --> Right
-                        if (e.Shift) //Move
-                        {
-                            viewMatrixData *= Matrix4.CreateTranslation(0.1f, 0, 0);
-                        }
-                        else //Rotate
-                        {
-                            viewMatrixData *= Matrix4.CreateRotationY(0.1f);
-                        }
-                        glControl1.Invalidate();
-                        break;
-                    case Keys.A: // <-- Left
-                        if (e.Shift) //Move
-                        {
-                            viewMatrixData *= Matrix4.CreateTranslation(-0.1f, 0, 0);
-                        }
-                        else //Rotate
-                        {
-                            viewMatrixData *= Matrix4.CreateRotationY(-0.1f);
-                        }
-                        glControl1.Invalidate();
-                        break;
-                    case Keys.W: // Up 
-                        if (e.Control) //Toggle WireFrame
-                        {
-                            wireFrameMode = (wireFrameMode + 1) % 3;
-                            glControl1.Invalidate();
-                        }
-                        else if (e.Shift) //Move
-                        {
-                            viewMatrixData *= Matrix4.CreateTranslation(0, 0.1f, 0);
-                        }
-                        else //Rotate
-                        {
-                            viewMatrixData *= Matrix4.CreateRotationX(0.1f);
-                        }
-                        glControl1.Invalidate();
-                        break;
-                    case Keys.S: // Down
-                        if (e.Control) //Toggle Shade
-                        {
-                            shadeMode = (shadeMode + 1) % 2;
-                            glControl1.Invalidate();
-                        }
-                        else if (e.Shift) //Move
-                        {
-                            viewMatrixData *= Matrix4.CreateTranslation(0, -0.1f, 0);
-                        }
-                        else //Rotate
-                        {
-                            viewMatrixData *= Matrix4.CreateRotationX(-0.1f);
-                        }
-                        glControl1.Invalidate();
-                        break;
-                    case Keys.Q: // Zoom Out
-                        viewMatrixData *= Matrix4.CreateScale(0.9f);
-                        glControl1.Invalidate();
-                        break;
-                    case Keys.E: // Zoom In
-                        viewMatrixData *= Matrix4.CreateScale(1.1f);
-                        glControl1.Invalidate();
-                        break;
+                    // Wireframe Mode
+                    if (_keyboardState.IsKeyDown(Key.W) && _keyboardStateOld.IsKeyUp(Key.W))
+                        wireFrameMode = (wireFrameMode + 1) % 3;
+
+                    // Shade Mode
+                    if (_keyboardState.IsKeyDown(Key.S) && _keyboardStateOld.IsKeyUp(Key.S))
+                        shadeMode = (shadeMode + 1) % 2;
+
+                    // Normal Mode
+                    if (_keyboardState.IsKeyDown(Key.N) && _keyboardStateOld.IsKeyUp(Key.N))
+                    {
+                        normalMode = (normalMode + 1) % 2;
+                        createVAO();
+                    }
                 }
-                // Normal mode
-                if (e.Control && e.KeyCode == Keys.N)
+                // Move
+                else if (_keyboardState.IsKeyDown(Key.LShift) || _keyboardState.IsKeyDown(Key.RShift))
                 {
-                    normalMode = (normalMode + 1) % 2;
-                    createVAO();
-                    glControl1.Invalidate();
+                    // Right
+                    if (_keyboardState.IsKeyDown(Key.D))
+                        newMatrix *= Matrix4.CreateTranslation(0.01f, 0, 0);
+
+                    // Left
+                    if (_keyboardState.IsKeyDown(Key.A))
+                        newMatrix *= Matrix4.CreateTranslation(-0.01f, 0, 0);
+
+                    // Up
+                    if (_keyboardState.IsKeyDown(Key.W))
+                        newMatrix *= Matrix4.CreateTranslation(0, 0.01f, 0);
+
+                    // Down
+                    if (_keyboardState.IsKeyDown(Key.S))
+                        newMatrix *= Matrix4.CreateTranslation(0, -0.01f, 0);
                 }
+                // Rotate & Zoom
+                else
+                {
+                    // Right
+                    if (_keyboardState.IsKeyDown(Key.D))
+                        newMatrix *= Matrix4.CreateRotationY(0.01f);
+
+                    // Left
+                    if (_keyboardState.IsKeyDown(Key.A))
+                        newMatrix *= Matrix4.CreateRotationY(-0.01f);
+
+                    // Up
+                    if (_keyboardState.IsKeyDown(Key.W))
+                        newMatrix *= Matrix4.CreateRotationX(0.01f);
+
+                    // Down
+                    if (_keyboardState.IsKeyDown(Key.S))
+                        newMatrix *= Matrix4.CreateRotationX(-0.01f);
+
+                    // Zoom in
+                    if (_keyboardState.IsKeyDown(Key.Q))
+                        newMatrix *= Matrix4.CreateScale(0.99f);
+
+                    // Zoom out
+                    if (_keyboardState.IsKeyDown(Key.E))
+                        newMatrix *= Matrix4.CreateScale(1.01f);
+                }
+                
                 // Toggle Timer
-                if (e.KeyCode == Keys.T)
+                if (_keyboardState.IsKeyDown(Key.T) && _keyboardStateOld.IsKeyUp(Key.T))
                 {
                     timerOpenTK.Enabled = !timerOpenTK.Enabled;
                 }
+
+                viewMatrixData = newMatrix;
+                glControl1.Invalidate();
             }
+
+            _keyboardStateOld = _keyboardState;
         }
 
         private void dontLoadAssetsMenuItem_CheckedChanged(object sender, EventArgs e)
@@ -1477,6 +1487,14 @@ namespace AssetStudio
             Studio.StatusStripUpdate = StatusStripUpdate;
             Studio.ProgressBarMaximumAdd = ProgressBarMaximumAdd;
 
+            ThreadPool.QueueUserWorkItem(state =>
+            {
+                while (true)
+                {
+                    HandleKeyboardInput();
+                    Thread.Sleep((int)(1000f / DisplayDevice.Default.RefreshRate));
+                }
+            });
 
             if (filesToOpen?.Length > 0)
             {
