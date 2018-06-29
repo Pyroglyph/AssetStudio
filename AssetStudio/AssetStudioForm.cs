@@ -294,7 +294,7 @@ namespace AssetStudio
                     if (InputHelper.IsNewKeyDown(Key.N))
                     {
                         normalMode = (normalMode + 1) % 2;
-                        createVAO();
+                        glControl1.Invoke(new Action(createVAO));
                     }
                 }
                 // Move
