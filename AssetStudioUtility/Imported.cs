@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using SharpDX;
@@ -15,11 +16,63 @@ namespace AssetStudio
         List<ImportedMorph> MorphList { get; }
     }
 
-    public class ImportedFrame : ObjChildren<ImportedFrame>, IObjChild
+    public class ImportedFrame : IEnumerable<ImportedFrame>
     {
         public string Name { get; set; }
-        public Matrix Matrix { get; set; }
-        public dynamic Parent { get; set; }
+        public float[] LocalRotation { get; set; }
+        public float[] LocalPosition { get; set; }
+        public float[] LocalScale { get; set; }
+        public ImportedFrame Parent { get; set; }
+
+        private List<ImportedFrame> children;
+
+        public ImportedFrame this[int i] => children[i];
+
+        public int Count => children.Count;
+
+        public void InitChildren(int count)
+        {
+            children = new List<ImportedFrame>(count);
+        }
+
+        public void AddChild(ImportedFrame obj)
+        {
+            children.Add(obj);
+            obj.Parent = this;
+        }
+
+        public void InsertChild(int i, ImportedFrame obj)
+        {
+            children.Insert(i, obj);
+            obj.Parent = this;
+        }
+
+        public void RemoveChild(ImportedFrame obj)
+        {
+            obj.Parent = null;
+            children.Remove(obj);
+        }
+
+        public void RemoveChild(int i)
+        {
+            children[i].Parent = null;
+            children.RemoveAt(i);
+        }
+
+        public int IndexOf(ImportedFrame obj)
+        {
+            return children.IndexOf(obj);
+        }
+
+        public IEnumerator<ImportedFrame> GetEnumerator()
+        {
+            return children.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 
     public class ImportedMesh
@@ -59,7 +112,7 @@ namespace AssetStudio
     public class ImportedBone
     {
         public string Name { get; set; }
-        public Matrix Matrix { get; set; }
+        public float[,] Matrix { get; set; }
     }
 
     public class ImportedMaterial
@@ -121,15 +174,11 @@ namespace AssetStudio
     {
         public float time { get; set; }
         public T value { get; set; }
-        public T inSlope { get; set; }
-        public T outSlope { get; set; }
 
-        public ImportedKeyframe(float time, T value, T inSlope, T outSlope)
+        public ImportedKeyframe(float time, T value)
         {
             this.time = time;
             this.value = value;
-            this.inSlope = inSlope;
-            this.outSlope = outSlope;
         }
     }
 

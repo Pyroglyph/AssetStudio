@@ -4,7 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using BrotliSharpLib;
+using Org.Brotli.Dec;
 
 namespace AssetStudio
 {
@@ -12,7 +12,7 @@ namespace AssetStudio
     {
         public static byte[] gzipMagic = { 0x1f, 0x8b };
         public static byte[] brotliMagic = { 0x62, 0x72, 0x6F, 0x74, 0x6C, 0x69 };
-        public List<MemoryFile> fileList = new List<MemoryFile>();
+        public List<StreamFile> fileList = new List<StreamFile>();
 
 
         public class WebData
@@ -47,9 +47,10 @@ namespace AssetStudio
                 reader.Position = 0;
                 if (brotliMagic.SequenceEqual(magic))
                 {
-                    var buff = reader.ReadBytes((int)reader.BaseStream.Length);
-                    var uncompressedData = Brotli.DecompressBuffer(buff, 0, buff.Length);
-                    var stream = new MemoryStream(uncompressedData);
+                    var brotliStream = new BrotliInputStream(reader.BaseStream);
+                    var stream = new MemoryStream();
+                    brotliStream.CopyTo(stream);
+                    stream.Position = 0;
                     using (reader = new EndianBinaryReader(stream, EndianType.LittleEndian))
                     {
                         ReadWebData(reader);
@@ -82,7 +83,7 @@ namespace AssetStudio
 
             foreach (var data in dataList)
             {
-                var file = new MemoryFile();
+                var file = new StreamFile();
                 file.fileName = Path.GetFileName(data.path);
                 reader.Position = data.dataOffset;
                 file.stream = new MemoryStream(reader.ReadBytes(data.dataLength));

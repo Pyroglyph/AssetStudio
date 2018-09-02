@@ -55,17 +55,16 @@
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BrotliSharpLib, Version=0.2.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Library\BrotliSharpLib.dll</HintPath>
+    <Reference Include="dnlib">
+      <HintPath>Library\dnlib.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="OpenTK, Version=2.0.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+    <Reference Include="OpenTK, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Library\OpenTK.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="OpenTK.GLControl, Version=1.1.0.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
+    <Reference Include="OpenTK.GLControl, Version=3.0.1.0, Culture=neutral, PublicKeyToken=bad199fe84eb3df4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Library\OpenTK.GLControl.dll</HintPath>
       <Private>False</Private>
@@ -136,7 +135,23 @@
     <Compile Include="7zip\ICoder.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="7zip\SevenZipHelper.cs">
+    <Compile Include="Brotli\BitReader.cs" />
+    <Compile Include="Brotli\BrotliInputStream.cs" />
+    <Compile Include="Brotli\BrotliRuntimeException.cs" />
+    <Compile Include="Brotli\Context.cs" />
+    <Compile Include="Brotli\Decode.cs" />
+    <Compile Include="Brotli\Dictionary.cs" />
+    <Compile Include="Brotli\Huffman.cs" />
+    <Compile Include="Brotli\HuffmanTreeGroup.cs" />
+    <Compile Include="Brotli\IntReader.cs" />
+    <Compile Include="Brotli\Prefix.cs" />
+    <Compile Include="Brotli\RunningState.cs" />
+    <Compile Include="Brotli\State.cs" />
+    <Compile Include="Brotli\Transform.cs" />
+    <Compile Include="Brotli\Utils.cs" />
+    <Compile Include="Brotli\WordTransformType.cs" />
+    <Compile Include="Classes\MonoScript.cs" />
+    <Compile Include="StudioClasses\SevenZipHelper.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Classes\Animation.cs" />
@@ -152,6 +167,7 @@
     <Compile Include="StudioClasses\ClassIDReference.cs" />
     <Compile Include="StudioClasses\ClassMember.cs" />
     <Compile Include="StudioClasses\ClassStructHelper.cs" />
+    <Compile Include="StudioClasses\ResourcesHelper.cs" />
     <Compile Include="StudioClasses\InputHelper.cs" />
     <Compile Include="StudioClasses\ShaderResource.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -172,6 +188,7 @@
     <Compile Include="StudioClasses\SpriteHelper.cs" />
     <Compile Include="StudioClasses\Exporter.cs" />
     <Compile Include="StudioClasses\Importer.cs" />
+    <Compile Include="StudioClasses\StreamExtensions.cs" />
     <Compile Include="StudioClasses\Studio.cs" />
     <Compile Include="StudioClasses\EndianBinaryReader.cs" />
     <Compile Include="ExportOptions.cs">

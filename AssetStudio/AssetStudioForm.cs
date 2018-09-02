@@ -36,13 +36,17 @@ namespace AssetStudio
 
         private Bitmap imageTexture;
 
-        #region OpenTK
+        #region GLControl
+        private bool glControlLoaded;
+        private int mdx, mdy;
+        private bool lmdown, rmdown;
         private int pgmID, pgmColorID, pgmBlackID;
         private int attributeVertexPosition;
         private int attributeNormalDirection;
         private int attributeVertexColor;
         private int uniformModelMatrix;
         private int uniformViewMatrix;
+        private int uniformProjMatrix;
         private int vao;
         private Vector3[] vertexData;
         private Vector3[] normalData;
@@ -50,6 +54,7 @@ namespace AssetStudio
         private Vector4[] colorData;
         private Matrix4 modelMatrixData;
         private Matrix4 viewMatrixData;
+        private Matrix4 projMatrixData;
         private int[] indiceData;
         private int wireFrameMode;
         private int shadeMode;
@@ -232,7 +237,7 @@ namespace AssetStudio
                         Text = type.ToString()
                     };
                     typeItem.Click += typeToolStripMenuItem_Click;
-                    showTypeToolStripMenuItem.DropDownItems.Add(typeItem);
+                    filterTypeToolStripMenuItem.DropDownItems.Add(typeItem);
                 }
                 allToolStripMenuItem.Checked = true;
                 StatusStripUpdate($"Finished loading {assetsfileList.Count} files with {assetListView.Items.Count} exportable assets.");
@@ -249,9 +254,9 @@ namespace AssetStudio
             }
             else if (allToolStripMenuItem.Checked)
             {
-                for (var i = 1; i < showTypeToolStripMenuItem.DropDownItems.Count; i++)
+                for (var i = 1; i < filterTypeToolStripMenuItem.DropDownItems.Count; i++)
                 {
-                    var item = (ToolStripMenuItem)showTypeToolStripMenuItem.DropDownItems[i];
+                    var item = (ToolStripMenuItem)filterTypeToolStripMenuItem.DropDownItems[i];
                     item.Checked = false;
                 }
             }
@@ -791,8 +796,15 @@ namespace AssetStudio
                     }
                 case ClassIDReference.MonoBehaviour:
                     {
-                        MonoBehaviour m_MonoBehaviour = new MonoBehaviour(asset, true);
-                        textPreviewBox.Text = m_MonoBehaviour.serializedText;
+                        var m_MonoBehaviour = new MonoBehaviour(asset);
+                        if (asset.Type1 != asset.Type2 && asset.sourceFile.ClassStructures.ContainsKey(asset.Type1))
+                        {
+                            textPreviewBox.Text = asset.GetClassString();
+                        }
+                        else
+                        {
+                            textPreviewBox.Text = GetScriptString(asset);
+                        }
                         textPreviewBox.Visible = true;
 
                         break;
@@ -854,9 +866,13 @@ namespace AssetStudio
                         var m_Mesh = new Mesh(asset, true);
                         if (m_Mesh.m_VertexCount > 0)
                         {
-                            glControl1.Visible = true;
                             viewMatrixData = Matrix4.CreateRotationY(-(float)Math.PI / 4) * Matrix4.CreateRotationX(-(float)Math.PI / 6);
                             #region Vertices
+                            if (m_Mesh.m_Vertices == null || m_Mesh.m_Vertices.Length == 0)
+                            {
+                                StatusStripUpdate("Mesh can't be previewed.");
+                                return;
+                            }
                             int count = 3;
                             if (m_Mesh.m_Vertices.Length == m_Mesh.m_VertexCount * 4)
                             {
@@ -950,15 +966,7 @@ namespace AssetStudio
                             }
                             #endregion
                             #region Colors
-                            if (m_Mesh.m_Colors == null || m_Mesh.m_Colors.Length == 0)
-                            {
-                                colorData = new Vector4[m_Mesh.m_VertexCount];
-                                for (int c = 0; c < m_Mesh.m_VertexCount; c++)
-                                {
-                                    colorData[c] = new Vector4(0.5f, 0.5f, 0.5f, 1.0f);
-                                }
-                            }
-                            else if (m_Mesh.m_Colors.Length == m_Mesh.m_VertexCount * 3)
+                            if (m_Mesh.m_Colors != null && m_Mesh.m_Colors.Length == m_Mesh.m_VertexCount * 3)
                             {
                                 colorData = new Vector4[m_Mesh.m_VertexCount];
                                 for (int c = 0; c < m_Mesh.m_VertexCount; c++)
@@ -970,7 +978,7 @@ namespace AssetStudio
                                         1.0f);
                                 }
                             }
-                            else
+                            else if (m_Mesh.m_Colors != null && m_Mesh.m_Colors.Length == m_Mesh.m_VertexCount * 4)
                             {
                                 colorData = new Vector4[m_Mesh.m_VertexCount];
                                 for (int c = 0; c < m_Mesh.m_VertexCount; c++)
@@ -982,11 +990,20 @@ namespace AssetStudio
                                     m_Mesh.m_Colors[c * 4 + 3]);
                                 }
                             }
+                            else
+                            {
+                                colorData = new Vector4[m_Mesh.m_VertexCount];
+                                for (int c = 0; c < m_Mesh.m_VertexCount; c++)
+                                {
+                                    colorData[c] = new Vector4(0.5f, 0.5f, 0.5f, 1.0f);
+                                }
+                            }
                             #endregion
+                            glControl1.Visible = true;
                             createVAO();
                         }
                         StatusStripUpdate("Using OpenGL Version: " + GL.GetString(StringName.Version) + "\n"
-                                        + "'T'=Start/Stop Rotation | 'WASD'=Manual Rotate | 'Shift WASD'=Move | 'Q/E'=Zoom \n"
+                                        + "'Mouse Left'=Rotate | 'Mouse Right'=Move | 'Mouse Wheel'=Zoom \n"
                                         + "'Ctrl W'=Wireframe | 'Ctrl S'=Shade | 'Ctrl N'=ReNormal ");
                     }
                     break;
@@ -1026,7 +1043,7 @@ namespace AssetStudio
                     }
                 default:
                     {
-                        var str = asset.Deserialize();
+                        var str = asset.GetClassString();
                         if (str != null)
                         {
                             textPreviewBox.Text = str;
@@ -1500,18 +1517,9 @@ namespace AssetStudio
             }
         }
 
-        private void timerOpenTK_Tick(object sender, EventArgs e)
-        {
-            if (glControl1.Visible)
-            {
-                viewMatrixData *= Matrix4.CreateRotationY(-0.1f);
-                glControl1.Invalidate();
-            }
-        }
-
         private void initOpenTK()
         {
-            GL.Viewport(0, 0, glControl1.ClientSize.Width, glControl1.ClientSize.Height);
+            changeGLSize(glControl1.Size);
             GL.ClearColor(Color.CadetBlue);
             pgmID = GL.CreateProgram();
             loadShader("vs", ShaderType.VertexShader, pgmID, out int vsID);
@@ -1533,7 +1541,7 @@ namespace AssetStudio
             attributeVertexColor = GL.GetAttribLocation(pgmColorID, "vertexColor");
             uniformModelMatrix = GL.GetUniformLocation(pgmID, "modelMatrix");
             uniformViewMatrix = GL.GetUniformLocation(pgmID, "viewMatrix");
-            glControl1.Visible = false;
+            uniformProjMatrix = GL.GetUniformLocation(pgmID, "projMatrix");
         }
 
         private void loadShader(string filename, ShaderType type, int program, out int address)
@@ -1588,7 +1596,6 @@ namespace AssetStudio
 
         private void createVAO()
         {
-            timerOpenTK.Stop();
             GL.DeleteVertexArray(vao);
             GL.GenVertexArrays(1, out vao);
             GL.BindVertexArray(vao);
@@ -1605,15 +1612,41 @@ namespace AssetStudio
             createVBO(out var vboColors, colorData, attributeVertexColor);
             createVBO(out var vboModelMatrix, modelMatrixData, uniformModelMatrix);
             createVBO(out var vboViewMatrix, viewMatrixData, uniformViewMatrix);
+            createVBO(out var vboProjMatrix, projMatrixData, uniformProjMatrix);
             createEBO(out var eboElements, indiceData);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
             GL.BindVertexArray(0);
         }
 
-        protected override void OnLoad(EventArgs e)
+        private void changeGLSize(Size size)
         {
-            base.OnLoad(e);
+            GL.Viewport(0, 0, size.Width, size.Height);
+
+            if (size.Width <= size.Height)
+            {
+                float k = 1.0f * size.Width / size.Height;
+                projMatrixData = Matrix4.CreateScale(1, k, 1);
+            }
+            else
+            {
+                float k = 1.0f * size.Height / size.Width;
+                projMatrixData = Matrix4.CreateScale(k, 1, 1);
+            }
+        }
+
+        private void preview_Resize(object sender, EventArgs e)
+        {
+            if (glControlLoaded && glControl1.Visible)
+            {
+                changeGLSize(glControl1.Size);
+                glControl1.Invalidate();
+            }
+        }
+
+        private void glControl1_Load(object sender, EventArgs e)
+        {
             initOpenTK();
+            glControlLoaded = true;
         }
 
         private void glControl1_Paint(object sender, PaintEventArgs e)
@@ -1628,6 +1661,7 @@ namespace AssetStudio
                 GL.UseProgram(shadeMode == 0 ? pgmID : pgmColorID);
                 GL.UniformMatrix4(uniformModelMatrix, false, ref modelMatrixData);
                 GL.UniformMatrix4(uniformViewMatrix, false, ref viewMatrixData);
+                GL.UniformMatrix4(uniformProjMatrix, false, ref projMatrixData);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
                 GL.DrawElements(BeginMode.Triangles, indiceData.Length, DrawElementsType.UnsignedInt, 0);
             }
@@ -1639,6 +1673,7 @@ namespace AssetStudio
                 GL.UseProgram(pgmBlackID);
                 GL.UniformMatrix4(uniformModelMatrix, false, ref modelMatrixData);
                 GL.UniformMatrix4(uniformViewMatrix, false, ref viewMatrixData);
+                GL.UniformMatrix4(uniformProjMatrix, false, ref projMatrixData);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
                 GL.DrawElements(BeginMode.Triangles, indiceData.Length, DrawElementsType.UnsignedInt, 0);
                 GL.Disable(EnableCap.PolygonOffsetLine);
@@ -1654,6 +1689,57 @@ namespace AssetStudio
             {
                 viewMatrixData *= Matrix4.CreateScale(1 + e.Delta / 1000f);
                 glControl1.Invalidate();
+            }
+        }
+
+        private void glControl1_MouseDown(object sender, MouseEventArgs e)
+        {
+            mdx = e.X;
+            mdy = e.Y;
+            if (e.Button == MouseButtons.Left)
+            {
+                lmdown = true;
+            }
+            if (e.Button == MouseButtons.Right)
+            {
+                rmdown = true;
+            }
+        }
+
+        private void glControl1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (lmdown || rmdown)
+            {
+                float dx = mdx - e.X;
+                float dy = mdy - e.Y;
+                mdx = e.X;
+                mdy = e.Y;
+                if (lmdown)
+                {
+                    dx *= 0.01f;
+                    dy *= 0.01f;
+                    viewMatrixData *= Matrix4.CreateRotationX(dy);
+                    viewMatrixData *= Matrix4.CreateRotationY(dx);
+                }
+                if (rmdown)
+                {
+                    dx *= 0.003f;
+                    dy *= 0.003f;
+                    viewMatrixData *= Matrix4.CreateTranslation(-dx, dy, 0);
+                }
+                glControl1.Invalidate();
+            }
+        }
+
+        private void glControl1_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                lmdown = false;
+            }
+            if (e.Button == MouseButtons.Right)
+            {
+                rmdown = false;
             }
         }
 
@@ -1700,13 +1786,16 @@ namespace AssetStudio
             enableFiltering = false;
             listSearch.Text = " Filter ";
 
-            var count = showTypeToolStripMenuItem.DropDownItems.Count;
+            var count = filterTypeToolStripMenuItem.DropDownItems.Count;
             for (var i = 1; i < count; i++)
             {
-                showTypeToolStripMenuItem.DropDownItems.RemoveAt(1);
+                filterTypeToolStripMenuItem.DropDownItems.RemoveAt(1);
             }
 
             FMODreset();
+
+            moduleLoaded = false;
+            LoadedModuleDic.Clear();
         }
 
         private void assetListView_MouseClick(object sender, MouseEventArgs e)
@@ -1813,7 +1902,8 @@ namespace AssetStudio
                 if (saveFolderDialog1.ShowDialog(this) == DialogResult.OK)
                 {
                     var exportPath = saveFolderDialog1.Folder + "\\GameObject\\";
-                    ExportObjectsWithAnimationClip(exportPath, sceneTreeView.Nodes, GetSelectedAssets());
+                    var animationList = GetSelectedAssets().Where(x => x.Type == ClassIDReference.AnimationClip).ToList();
+                    ExportObjectsWithAnimationClip(exportPath, sceneTreeView.Nodes, animationList.Count == 0 ? null : animationList);
                 }
             }
             else
@@ -1869,9 +1959,9 @@ namespace AssetStudio
             var show = new List<ClassIDReference>();
             if (!allToolStripMenuItem.Checked)
             {
-                for (var i = 1; i < showTypeToolStripMenuItem.DropDownItems.Count; i++)
+                for (var i = 1; i < filterTypeToolStripMenuItem.DropDownItems.Count; i++)
                 {
-                    var item = (ToolStripMenuItem)showTypeToolStripMenuItem.DropDownItems[i];
+                    var item = (ToolStripMenuItem)filterTypeToolStripMenuItem.DropDownItems[i];
                     if (item.Checked)
                     {
                         show.Add((ClassIDReference)Enum.Parse(typeof(ClassIDReference), item.Text));

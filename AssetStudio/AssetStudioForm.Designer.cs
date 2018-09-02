@@ -49,7 +49,7 @@
             this.exportallobjectsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportallobjectssplitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportselectedobjectsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.exportAllObjectssplitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.exportSelectedObjectsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportSelectedObjectsWithAnimationClipToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -59,7 +59,7 @@
             this.exportFilteredAssetsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.exportAnimatorWithSelectedAnimationClipToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.filterTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debugMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.buildClassStructuresMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -105,7 +105,6 @@
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.timer = new System.Windows.Forms.Timer(this.components);
-            this.timerOpenTK = new System.Windows.Forms.Timer(this.components);
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -114,6 +113,7 @@
             this.exportobjectswithselectedAnimationClipMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.jumpToSceneHierarchyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showOriginalFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -140,7 +140,7 @@
             this.optionsToolStripMenuItem,
             this.modelToolStripMenuItem,
             this.exportToolStripMenuItem,
-            this.showTypeToolStripMenuItem,
+            this.filterTypeToolStripMenuItem,
             this.debugMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -262,10 +262,12 @@
             // 
             // assetGroupOptions
             // 
+            this.assetGroupOptions.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.assetGroupOptions.FlatStyle = System.Windows.Forms.FlatStyle.System;
             this.assetGroupOptions.Items.AddRange(new object[] {
-            "Group exported assets by type",
-            "Group exported assets by source file",
-            "Do not group exported assets"});
+            "Group by type",
+            "Group by source file",
+            "Do not group"});
             this.assetGroupOptions.Name = "assetGroupOptions";
             this.assetGroupOptions.Size = new System.Drawing.Size(192, 25);
             this.assetGroupOptions.SelectedIndexChanged += new System.EventHandler(this.assetGroupOptions_SelectedIndexChanged);
@@ -280,10 +282,11 @@
             // modelToolStripMenuItem
             // 
             this.modelToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem3,
             this.exportallobjectsMenuItem,
             this.exportallobjectssplitToolStripMenuItem,
             this.exportselectedobjectsMenuItem,
-            this.toolStripSeparator1,
+            this.toolStripMenuItem2,
             this.exportAllObjectssplitToolStripMenuItem1,
             this.exportSelectedObjectsToolStripMenuItem,
             this.exportSelectedObjectsWithAnimationClipToolStripMenuItem});
@@ -312,10 +315,12 @@
             this.exportselectedobjectsMenuItem.Text = "Export selected objects";
             this.exportselectedobjectsMenuItem.Click += new System.EventHandler(this.ExportObjects_Click);
             // 
-            // toolStripSeparator1
+            // toolStripMenuItem2
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(320, 6);
+            this.toolStripMenuItem2.Enabled = false;
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(332, 22);
+            this.toolStripMenuItem2.Text = "----------------------Binary----------------------";
             // 
             // exportAllObjectssplitToolStripMenuItem1
             // 
@@ -383,13 +388,13 @@
             this.exportAnimatorWithSelectedAnimationClipToolStripMenuItem.Text = "Export Animator with selected AnimationClip";
             this.exportAnimatorWithSelectedAnimationClipToolStripMenuItem.Click += new System.EventHandler(this.exportAnimatorwithAnimationClipMenuItem_Click);
             // 
-            // showTypeToolStripMenuItem
+            // filterTypeToolStripMenuItem
             // 
-            this.showTypeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.filterTypeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.allToolStripMenuItem});
-            this.showTypeToolStripMenuItem.Name = "showTypeToolStripMenuItem";
-            this.showTypeToolStripMenuItem.Size = new System.Drawing.Size(83, 21);
-            this.showTypeToolStripMenuItem.Text = "Show Type";
+            this.filterTypeToolStripMenuItem.Name = "filterTypeToolStripMenuItem";
+            this.filterTypeToolStripMenuItem.Size = new System.Drawing.Size(80, 21);
+            this.filterTypeToolStripMenuItem.Text = "Filter Type";
             // 
             // allToolStripMenuItem
             // 
@@ -619,6 +624,7 @@
             this.previewPanel.Name = "previewPanel";
             this.previewPanel.Size = new System.Drawing.Size(838, 632);
             this.previewPanel.TabIndex = 1;
+            this.previewPanel.Resize += new System.EventHandler(this.preview_Resize);
             // 
             // assetInfoLabel
             // 
@@ -790,8 +796,13 @@
             this.glControl1.Name = "glControl1";
             this.glControl1.Size = new System.Drawing.Size(838, 632);
             this.glControl1.TabIndex = 4;
+            this.glControl1.Visible = false;
             this.glControl1.VSync = false;
+            this.glControl1.Load += new System.EventHandler(this.glControl1_Load);
             this.glControl1.Paint += new System.Windows.Forms.PaintEventHandler(this.glControl1_Paint);
+            this.glControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseDown);
+            this.glControl1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseMove);
+            this.glControl1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseUp);
             this.glControl1.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.glControl1_MouseWheel);
             // 
             // classPreviewPanel
@@ -877,11 +888,6 @@
             this.timer.Interval = 10;
             this.timer.Tick += new System.EventHandler(this.timer_Tick);
             // 
-            // timerOpenTK
-            // 
-            this.timerOpenTK.Interval = 166;
-            this.timerOpenTK.Tick += new System.EventHandler(this.timerOpenTK_Tick);
-            // 
             // openFileDialog1
             // 
             this.openFileDialog1.AddExtension = false;
@@ -944,6 +950,13 @@
             this.showOriginalFileToolStripMenuItem.Text = "Show original file";
             this.showOriginalFileToolStripMenuItem.Visible = false;
             this.showOriginalFileToolStripMenuItem.Click += new System.EventHandler(this.showOriginalFileToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem3
+            // 
+            this.toolStripMenuItem3.Enabled = false;
+            this.toolStripMenuItem3.Name = "toolStripMenuItem3";
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(332, 22);
+            this.toolStripMenuItem3.Text = "-----------------------Ascii-----------------------";
             // 
             // AssetStudioForm
             // 
@@ -1029,7 +1042,6 @@
         private System.Windows.Forms.Label FMODtimerLabel;
         private System.Windows.Forms.Label FMODinfoLabel;
         private System.Windows.Forms.Timer timer;
-        private System.Windows.Forms.Timer timerOpenTK;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem displayAll;
         private System.Windows.Forms.ToolStripMenuItem displayOriginalName;
@@ -1066,15 +1078,16 @@
         private System.Windows.Forms.ToolStripMenuItem exportAnimatorwithselectedAnimationClipMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportobjectswithselectedAnimationClipMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedAssetsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem showTypeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem filterTypeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem allToolStripMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedObjectsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedObjectsWithAnimationClipToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem exportAnimatorWithSelectedAnimationClipToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportAllObjectssplitToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem jumpToSceneHierarchyToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem3;
     }
 }
 

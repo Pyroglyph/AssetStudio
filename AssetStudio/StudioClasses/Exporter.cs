@@ -145,11 +145,20 @@ namespace AssetStudio
 
         public static bool ExportMonoBehaviour(AssetPreloadData asset, string exportPath)
         {
-            var m_MonoBehaviour = new MonoBehaviour(asset, true);
-            var exportFullName = exportPath + asset.Text + asset.extension;
+            var exportFullName = exportPath + asset.Text + ".txt";
             if (ExportFileExists(exportFullName))
                 return false;
-            File.WriteAllText(exportFullName, m_MonoBehaviour.serializedText);
+            var m_MonoBehaviour = new MonoBehaviour(asset);
+            string str;
+            if (asset.Type1 != asset.Type2 && asset.sourceFile.ClassStructures.ContainsKey(asset.Type1))
+            {
+                str = asset.GetClassString();
+            }
+            else
+            {
+                str = Studio.GetScriptString(asset);
+            }
+            File.WriteAllText(exportFullName, str);
             return true;
         }
 
@@ -178,6 +187,10 @@ namespace AssetStudio
             var sb = new StringBuilder();
             sb.AppendLine("g " + m_Mesh.m_Name);
             #region Vertices
+            if (m_Mesh.m_Vertices == null || m_Mesh.m_Vertices.Length == 0)
+            {
+                return false;
+            }
             int c = 3;
             if (m_Mesh.m_Vertices.Length == m_Mesh.m_VertexCount * 4)
             {
