@@ -348,12 +348,6 @@ namespace AssetStudio
                     if (InputHelper.IsKeyDown(Key.E))
                         newMatrix *= Matrix4.CreateScale(1.01f);
                 }
-                
-                // Toggle Timer
-                if (InputHelper.IsNewKeyDown(Key.T))
-                {
-                    timerOpenTK.Enabled = !timerOpenTK.Enabled;
-                }
 
                 viewMatrixData = newMatrix;
                 glControl1.Invalidate();

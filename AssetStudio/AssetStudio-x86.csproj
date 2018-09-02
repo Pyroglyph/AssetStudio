@@ -180,6 +180,7 @@
     <Compile Include="StudioClasses\ClassStructHelper.cs" />
     <Compile Include="StudioClasses\FBXExporter.cs" />
     <Compile Include="StudioClasses\BuildTarget.cs" />
+    <Compile Include="StudioClasses\InputHelper.cs" />
     <Compile Include="StudioClasses\ModelConverter.cs" />
     <Compile Include="StudioClasses\ResourcesHelper.cs" />
     <Compile Include="StudioClasses\SevenZipHelper.cs" />
